@@ -57,7 +57,8 @@
                 <tr>
                     <th class="py-2 px-4">Folio</th>
                     <th class="py-2 px-4">Cantidad</th>
-                    <th class="py-2 px-4"></th>
+                    <th th:if="${isAlmac}" class="py-2 px-4">Sacar de inventario</th>
+                    <th th:if="${isAdmin}" class="py-2 px-4"></th>
                 </tr>
             </thead>
 

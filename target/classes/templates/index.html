@@ -67,13 +67,6 @@
         </div>
       </div>
 
-      <div th:if="${isAlmac}" class="p-2 w-1/3">
-        <div class="flex justify-center">
-          <a href="/salidaProductos" class="bg-blue-500 rounded-md p-2 text-white hover:bg-blue-700">Salida de productos</a>
-        </div>
-      </div>
-    </div>
-
     <script>
       const role = sessionStorage.getItem("rol");
       if (!role) window.location.href = "/login";
