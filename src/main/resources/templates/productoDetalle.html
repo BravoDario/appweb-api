@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script th:src="@{/js/script.js}"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Document</title>
+    </head>
+    <body class="bg-gray-50 text-gray-900 p-4">
+        <a
+            href="/"
+            class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
+        >
+            Volver a página principal
+        </a>
+
+        <h1
+            th:text="'Inventario de ' + ${nombreProducto}"
+            class="text-3xl font-bold text-center my-4"
+        >
+            Nombre del producto
+        </h1>
+
+        <div
+            class="flex flex-row justify-center items-center gap-2 mb-4"
+            th:if="${isAdmin}"
+        >
+            <input
+                type="number"
+                name="addCantidad"
+                id="cantidad"
+                min="1"
+                placeholder="Cantidad"
+                class="shadow appearance-none border rounded py-2 px-3 leading-tight focus:outline-none focus:shadow-outline w-32"
+            />
+
+            <input
+                type="hidden"
+                name="idProducto"
+                id="txtIdProducto"
+                th:value="${idProducto}"
+            />
+
+            <button
+                onclick="agregarInventario()"
+                class="bg-green-500 rounded-md p-2 text-white hover:bg-green-700 hover:cursor-pointer"
+            >
+                Agregar al inventario
+            </button>
+        </div>
+
+        <table class="w-full text-sm text-left text-gray-800 rounded-md">
+            <thead
+                class="text-xs text-center text-gray-900 uppercase bg-violet-200"
+            >
+                <tr>
+                    <th class="py-2 px-4">Folio</th>
+                    <th class="py-2 px-4">Cantidad</th>
+                    <th class="py-2 px-4"></th>
+                </tr>
+            </thead>
+
+            <tbody th:if="${productos != null and !#lists.isEmpty(productos)}">
+                <tr
+                    th:each="producto : ${productos}"
+                    class="bg-white border-b border-gray-200 text-center"
+                >
+                    <td th:text="${producto.folio}" class="py-2 px-4">Folio</td>
+                    <td th:text="${producto.cantidad}" class="py-2 px-4">
+                        Cantidad
+                    </td>
+                    <td class="py-2 px-4">
+                        <div
+                            th:if="${isAlmac}"
+                            class="flex flex-row justify-center gap-2 items-center"
+                        >
+                            <input
+                                type="number"
+                                th:id="'cantidadDescontar-' + ${producto.idInventario}"
+                                min="1"
+                                value="1"
+                                th:max="${producto.cantidad}"
+                                class="shadow border rounded w-20 py-1 px-2"
+                            />
+
+                            <input
+                                type="hidden"
+                                th:id="'cantidadOrigen-' + ${producto.idInventario}"
+                                th:value="${producto.cantidad}"
+                            />
+
+                            <button
+                                th:onclick="'javascript:eliminarInventario(' + ${producto.idInventario} + ')'"
+                                class="bg-red-500 rounded-md p-2 text-white hover:bg-red-700 hover:cursor-pointer"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+
+            <tbody th:if="${productos != null and #lists.isEmpty(productos)}">
+                <tr>
+                    <td colspan="3" class="text-center py-4">
+                        No hay productos disponibles.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

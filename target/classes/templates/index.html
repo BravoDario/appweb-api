@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Inventario de productos</title>
+    <script th:src="@{/js/script.js}" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50">
+    <h1 class="text-3xl font-bold text-center my-4">Inventario de productos</h1>
+    <div class="flex flex-row gap-2 px-4">
+      <div class="w-2/3 p-2">
+        <table class="w-full text-sm text-left text-gray-800 rounded-md">
+          <thead class="text-xs text-center text-gray-900 uppercase bg-violet-200">
+            <tr>
+              <th colspan="3" class="px-6 py-3 text-2xl border-b border-gray-200 rounded-t-md">Productos activos</th>
+            </tr>
+            <tr class="bg-violet-100">
+              <th class="py-2 text-base">Nombre</th>
+              <th class="py-2 text-base">Cantidad</th>
+              <th class="py-2 text-base">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="productosGrupoTbody">
+            <tr th:each="producto : ${productosGrupo}" class="bg-white border-b border-gray-200 text-center">
+              <td class="px-4 py-2" th:text="${producto.nombre}">Nombre</td>
+              <td class="px-4 py-2" th:text="${producto.cantidad}">Cantidad</td>
+              <td class="px-4 py-2">
+                <div class="flex flex-row justify-center gap-2">
+                  <a th:href="@{/productoDetalle(idProducto=${producto.idProducto}, np=${#strings.trim(producto.nombre)})}"
+                     class="bg-blue-500 rounded-md px-3 py-2 text-white hover:bg-blue-700"
+                     aria-label="Ver detalles de ${producto.nombre}">Detalles</a>
+                  <div th:if="${isAdmin}" class="flex gap-2">
+                    <button th:if="${producto.estatus == 0}"
+                            th:onclick="'javascript:activarProducto(' + ${producto.idProducto} + ')'"
+                            class="bg-green-500 rounded-md px-3 py-2 text-white hover:bg-green-700">
+                      Activar
+                    </button>
+                    <button th:if="${producto.estatus == 1}"
+                            th:onclick="'javascript:desactivarProducto(' + ${producto.idProducto} + ')'"
+                            class="bg-red-500 rounded-md px-3 py-2 text-white hover:bg-red-700">
+                      Desactivar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div th:if="${isAdmin}" class="p-2 w-1/3 flex flex-col gap-4">
+        <a href="/historico" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600 text-center">Ver histórico</a>
+        <button class="bg-blue-500 rounded-md p-2 text-white hover:bg-blue-700" onclick="mostrarFormularioNuevoProducto()">Agregar nuevo producto</button>
+        <div id="divNuevoProducto" class="hidden bg-violet-100 p-4 rounded-md">
+          <h2 class="text-xl font-bold text-center mb-2">Agregar nuevo producto</h2>
+          <div class="flex flex-col gap-2">
+            <div>
+              <label class="block text-sm font-bold mb-1" for="txtNuevoProducto">Nombre del producto</label>
+              <input id="txtNuevoProducto" type="text" placeholder="Nombre" class="shadow border rounded w-full py-2 px-3 focus:outline-none focus:shadow-outline">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-1" for="txtNuevoPrecio">Precio del producto</label>
+              <input id="txtNuevoPrecio" type="number" placeholder="$ Precio" class="shadow border rounded w-full py-2 px-3 focus:outline-none focus:shadow-outline">
+            </div>
+            <button class="bg-blue-500 rounded-md py-2 text-white hover:bg-blue-700" onclick="guardarNuevoProducto()">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${isAlmac}" class="p-2 w-1/3">
+        <div class="flex justify-center">
+          <a href="/salidaProductos" class="bg-blue-500 rounded-md p-2 text-white hover:bg-blue-700">Salida de productos</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const role = sessionStorage.getItem("rol");
+      if (!role) window.location.href = "/login";
+
+      const fetchPost = async (url, body) => {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          return await res.json();
+        } catch (error) {
+          console.error("Error en la petición:", error);
+        }
+      };
+
+      async function guardarNuevoProducto() {
+        const nombre = document.getElementById("txtNuevoProducto").value;
+        const precio = document.getElementById("txtNuevoPrecio").value;
+        const data = await fetchPost("/agregarProducto", { nombre, precio });
+        if (data) location.reload();
+      }
+
+      async function agregarInventario() {
+        const body = {
+          idProducto: document.getElementById("txtIdProducto").value,
+          idUsuario: sessionStorage.getItem("idUsuario"),
+          cantidad: document.getElementById("cantidad").value,
+        };
+        const data = await fetchPost("/registrarInventario", body);
+        if (data) location.reload();
+      }
+
+      async function eliminarInventario(idInventario) {
+        const cantidadOrigen = document.getElementById(`cantidadOrigen-${idInventario}`).value;
+        const cantidadDescontar = document.getElementById(`cantidadDescontar-${idInventario}`).value;
+        const idUsuario = sessionStorage.getItem("idUsuario");
+
+        if (cantidadDescontar > cantidadOrigen || cantidadDescontar < 1) {
+          alert("No puede eliminar esa cantidad");
+          return;
+        }
+
+        const body = { idInventario, idUsuario, cantidad: cantidadDescontar };
+        const data = await fetchPost("/eliminarInventario", body);
+        if (data) location.reload();
+      }
+
+      async function activarProducto(idProducto) {
+        const data = await fetchPost("/activarProducto", { idProducto });
+        if (data) location.reload();
+      }
+
+      async function desactivarProducto(idProducto) {
+        const data = await fetchPost("/desactivarProducto", { idProducto });
+        if (data) location.reload();
+      }
+
+      function mostrarFormularioNuevoProducto() {
+        const div = document.getElementById("divNuevoProducto");
+        div.classList.toggle("hidden");
+      }
+    </script>
+  </body>
+</html>
